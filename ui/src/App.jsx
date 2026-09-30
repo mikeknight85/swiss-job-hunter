@@ -528,6 +528,13 @@ export default function App() {
   const [jobs, setJobs] = useState([]);
   const [stats, setStats] = useState({});
   const [selected, setSelected] = useState(null);
+  // Detail pane width is user-draggable and remembered. localStorage can throw in
+  // private mode, so every access is guarded and falls back to the old fixed 400.
+  const [detailW, setDetailW] = useState(() => {
+    try { return parseInt(localStorage.getItem("sjh.detailWidth"), 10) || 400; }
+    catch { return 400; }
+  });
+  const draggingRef = useRef(false);
   const [log, setLog] = useState([]);
   const [loading, setLoading] = useState({});
   const pipelineRunning = useRef(false);
@@ -590,6 +597,26 @@ export default function App() {
   }, [minMatch]);
 
   useEffect(() => { fetchJobs(); fetchStats(); }, [fetchJobs, fetchStats]);
+
+  // Divider drag. Listeners live on window so the pointer can leave the handle
+  // mid-drag without the resize sticking.
+  useEffect(() => {
+    const onMove = e => {
+      if (!draggingRef.current) return;
+      const w = Math.round(window.innerWidth - e.clientX);
+      setDetailW(Math.max(320, Math.min(w, Math.max(360, window.innerWidth - 420))));
+    };
+    const onUp = () => {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      setDetailW(w => { try { localStorage.setItem("sjh.detailWidth", String(w)); } catch {} return w; });
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, []);
 
   useEffect(() => {
     fetch(`${API}/config`).then(r=>r.ok?r.json():null).then(cfg=>{
@@ -1255,8 +1282,22 @@ export default function App() {
                 </div>
               </div>
 
+              {/* DIVIDER — drag to resize the detail pane, double-click to reset */}
+              <div
+                onMouseDown={()=>{ draggingRef.current = true;
+                  document.body.style.cursor = "col-resize";
+                  document.body.style.userSelect = "none"; }}
+                onDoubleClick={()=>{ setDetailW(400);
+                  try { localStorage.setItem("sjh.detailWidth","400"); } catch {} }}
+                title="drag to resize · double-click to reset"
+                style={{width:5,flexShrink:0,cursor:"col-resize",background:"#d4cfc4",
+                  borderLeft:"1px solid #e0dbd0",borderRight:"1px solid #e0dbd0"}}
+                onMouseEnter={e=>e.currentTarget.style.background="#4d7ab5"}
+                onMouseLeave={e=>{ if(!draggingRef.current) e.currentTarget.style.background="#d4cfc4"; }}
+              />
+
               {/* RIGHT PANEL */}
-              <div style={{width:400,borderLeft:"1px solid #d4cfc4",display:"flex",
+              <div style={{width:detailW,borderLeft:"1px solid #d4cfc4",display:"flex",
                 flexDirection:"column",background:"#ede8de",flexShrink:0}}>
                 <div style={{display:"flex",borderBottom:"1px solid #d4cfc4",flexShrink:0,background:"#e8e3d8"}}>
                   <RTab id="detail" label="DETAIL"/>
