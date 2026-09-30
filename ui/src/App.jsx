@@ -7,6 +7,11 @@ const API = window.__API_BASE_URL__ || import.meta.env.VITE_API_BASE_URL || "htt
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
+// Font scale. Values are the original sizes the UI was authored at; collected here
+// so the whole UI can be tuned from one place instead of 125 scattered literals
+// (#15, point 2). Raise these to trade density for readability.
+const FS = { xxs: 7, xs: 8, sm: 9, base: 10, md: 11, lg: 12, xl: 14, xxl: 22 };
+
 const STATUS_META = {
   new:          { label: "NEW",         color: "#7a8fa8", bg: "rgba(122,143,168,0.10)" },
   analyzed:     { label: "ANALYZED",    color: "#4d7ab5", bg: "rgba(77,122,181,0.10)" },
@@ -102,7 +107,7 @@ function Stars({ stars, jobId, onUpdate }) {
           }}
           onMouseEnter={() => setHovered(n)}
           onMouseLeave={() => setHovered(null)}
-          style={{cursor:"pointer", fontSize:14, color: n <= current ? "#c09030" : "#d4cfc4",
+          style={{cursor:"pointer", fontSize:FS.xl, color: n <= current ? "#c09030" : "#d4cfc4",
             transition:"color 0.1s"}}>★</span>
       ))}
     </span>
@@ -110,7 +115,7 @@ function Stars({ stars, jobId, onUpdate }) {
 }
 
 function ScoreBar({ score }) {
-  if (score == null) return <span style={{color:"#a8a098",fontSize:11}}>—</span>;
+  if (score == null) return <span style={{color:"#a8a098",fontSize:FS.md}}>—</span>;
   const pct = Math.round(score * 100);
   const color = pct >= 70 ? "#4d8a68" : pct >= 40 ? "#a87c2e" : "#b84848";
   return (
@@ -118,7 +123,7 @@ function ScoreBar({ score }) {
       <div style={{width:44,height:3,background:"#d4cfc4",borderRadius:2,overflow:"hidden"}}>
         <div style={{width:`${pct}%`,height:"100%",background:color,transition:"width 0.6s"}}/>
       </div>
-      <span style={{color,fontSize:11,fontFamily:"mono",fontWeight:700}}>{pct}%</span>
+      <span style={{color,fontSize:FS.md,fontFamily:"mono",fontWeight:700}}>{pct}%</span>
     </div>
   );
 }
@@ -127,7 +132,7 @@ function Badge({ status }) {
   const m = STATUS_META[status] || STATUS_META.new;
   return (
     <span style={{
-      fontSize:9,fontWeight:700,letterSpacing:"0.08em",
+      fontSize:FS.sm,fontWeight:700,letterSpacing:"0.08em",
       color:m.color,background:m.bg,padding:"2px 7px",borderRadius:3,
       border:`1px solid ${m.color}35`,fontFamily:"monospace",whiteSpace:"nowrap",
     }}>{m.label}</span>
@@ -161,7 +166,7 @@ function LogPane({ lines, running }) {
   return (
     <div ref={ref} style={{
       flex:1,overflowY:"auto",background:"#f0ece4",borderRadius:6,
-      padding:"8px 10px",fontFamily:"monospace",fontSize:10,
+      padding:"8px 10px",fontFamily:"monospace",fontSize:FS.base,
       lineHeight:1.6,color:"#7a7268",border:"1px solid #d4cfc4",
     }}>
       {lines.length===0
@@ -178,7 +183,7 @@ function LogPane({ lines, running }) {
       {running && (
         <div style={{display:"flex",alignItems:"center",gap:5,marginTop:3,color:"#4d7ab5"}}>
           <span style={{animation:"logpulse 1s ease-in-out infinite"}}>●</span>
-          <span style={{fontSize:9,color:"#8a8278"}}>running...</span>
+          <span style={{fontSize:FS.sm,color:"#8a8278"}}>running...</span>
         </div>
       )}
     </div>
@@ -188,8 +193,8 @@ function LogPane({ lines, running }) {
 function StatCard({ label, value, color="#4d7ab5" }) {
   return (
     <div style={{background:"#e8e3d8",border:"1px solid #c8c2b4",borderRadius:7,padding:"8px 14px",minWidth:80}}>
-      <div style={{fontSize:9,color:"#8a8278",letterSpacing:"0.1em",fontWeight:700,marginBottom:3,fontFamily:"monospace"}}>{label}</div>
-      <div style={{fontSize:22,fontWeight:700,color,fontFamily:"monospace",lineHeight:1}}>{value??0}</div>
+      <div style={{fontSize:FS.sm,color:"#8a8278",letterSpacing:"0.1em",fontWeight:700,marginBottom:3,fontFamily:"monospace"}}>{label}</div>
+      <div style={{fontSize:FS.xxl,fontWeight:700,color,fontFamily:"monospace",lineHeight:1}}>{value??0}</div>
     </div>
   );
 }
@@ -225,17 +230,17 @@ function ApplyModal({ job, coverLetter, onClose, onDone, addLog }) {
         background:"#f0ece4",border:"1px solid #c8c2b4",borderRadius:10,
         padding:28,width:460,boxShadow:"0 16px 48px rgba(80,60,40,0.18)",
       }}>
-        <div style={{fontSize:14,fontWeight:700,color:"#2c2820",marginBottom:4}}>{job.title}</div>
-        <div style={{fontSize:11,color:"#8a8278",marginBottom:20}}>{job.company} · {job.location}</div>
+        <div style={{fontSize:FS.xl,fontWeight:700,color:"#2c2820",marginBottom:4}}>{job.title}</div>
+        <div style={{fontSize:FS.md,color:"#8a8278",marginBottom:20}}>{job.company} · {job.location}</div>
 
-        <div style={{fontSize:10,color:"#8a8278",letterSpacing:"0.1em",fontWeight:700,marginBottom:8}}>APPLICATION METHOD</div>
+        <div style={{fontSize:FS.base,color:"#8a8278",letterSpacing:"0.1em",fontWeight:700,marginBottom:8}}>APPLICATION METHOD</div>
         <div style={{display:"flex",gap:8,marginBottom:18}}>
           {APPLY_METHODS.map(m=>(
             <button key={m.id} onClick={()=>setMethod(m.id)} style={{
               flex:1,padding:"8px 0",borderRadius:5,border:`1px solid ${method===m.id?"#4d8a6850":"#c8c2b4"}`,
               background:method===m.id?"#4d8a6812":"transparent",
               color:method===m.id?"#4d8a68":"#8a8278",
-              fontSize:10,cursor:"pointer",fontFamily:"monospace",fontWeight:600,
+              fontSize:FS.base,cursor:"pointer",fontFamily:"monospace",fontWeight:600,
             }}>{m.icon} {m.label}</button>
           ))}
         </div>
@@ -298,9 +303,9 @@ function Timeline({ jobId, onRefresh }) {
   return (
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-        <div style={{fontSize:10,color:"#8a8278",letterSpacing:"0.1em",fontWeight:700}}>TIMELINE</div>
+        <div style={{fontSize:FS.base,color:"#8a8278",letterSpacing:"0.1em",fontWeight:700}}>TIMELINE</div>
         <button onClick={()=>setAdding(p=>!p)} style={{
-          fontSize:9,padding:"3px 9px",borderRadius:3,border:"1px solid #4d7ab550",
+          fontSize:FS.sm,padding:"3px 9px",borderRadius:3,border:"1px solid #4d7ab550",
           background:"#4d7ab510",color:"#4d7ab5",cursor:"pointer",fontFamily:"monospace",fontWeight:700,
         }}>+ ADD EVENT</button>
       </div>
@@ -310,7 +315,7 @@ function Timeline({ jobId, onRefresh }) {
           <div style={{display:"flex",flexWrap:"wrap",gap:4,marginBottom:8}}>
             {ADDABLE_EVENTS.map(t=>(
               <button key={t} onClick={()=>setEvType(t)} style={{
-                fontSize:9,padding:"2px 7px",borderRadius:3,
+                fontSize:FS.sm,padding:"2px 7px",borderRadius:3,
                 border:`1px solid ${evType===t?(EVENT_META[t]?.color||"#4d7ab5")+"50":"#c8c2b4"}`,
                 background:evType===t?`${EVENT_META[t]?.color||"#4d7ab5"}12`:"transparent",
                 color:evType===t?(EVENT_META[t]?.color||"#4d7ab5"):"#8a8278",
@@ -319,7 +324,7 @@ function Timeline({ jobId, onRefresh }) {
             ))}
           </div>
           <input value={evNote} onChange={e=>setEvNote(e.target.value)}
-            placeholder="Note (optional)..." style={{...inp,marginBottom:8,fontSize:10}}/>
+            placeholder="Note (optional)..." style={{...inp,marginBottom:8,fontSize:FS.base}}/>
           <div style={{display:"flex",gap:6,justifyContent:"flex-end"}}>
             <Btn onClick={()=>setAdding(false)} label="Cancel" icon="✕" color="#8a8278" small/>
             <Btn onClick={addEvent} loading={loading} label="Add" icon="+" color="#4d7ab5" small/>
@@ -328,7 +333,7 @@ function Timeline({ jobId, onRefresh }) {
       )}
 
       {events.length===0
-        ? <div style={{color:"#a8a098",fontSize:11,padding:"8px 0"}}>No events yet</div>
+        ? <div style={{color:"#a8a098",fontSize:FS.md,padding:"8px 0"}}>No events yet</div>
         : (
           <div style={{position:"relative",paddingLeft:20}}>
             <div style={{position:"absolute",left:7,top:6,bottom:6,width:1,background:"#d4cfc4"}}/>
@@ -340,13 +345,13 @@ function Timeline({ jobId, onRefresh }) {
                     position:"absolute",left:-20,top:1,width:14,height:14,
                     borderRadius:"50%",background:"#ede8de",border:`2px solid ${m.color}`,
                     display:"flex",alignItems:"center",justifyContent:"center",
-                    fontSize:8,
+                    fontSize:FS.xs,
                   }}>{m.icon}</div>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                    <div style={{fontSize:11,fontWeight:700,color:m.color}}>{m.label}</div>
-                    <div style={{fontSize:9,color:"#a8a098",fontFamily:"monospace"}}>{fmt(e.occurred_at)}</div>
+                    <div style={{fontSize:FS.md,fontWeight:700,color:m.color}}>{m.label}</div>
+                    <div style={{fontSize:FS.sm,color:"#a8a098",fontFamily:"monospace"}}>{fmt(e.occurred_at)}</div>
                   </div>
-                  {e.note && <div style={{fontSize:10,color:"#5e5850",marginTop:2,lineHeight:1.5}}>{e.note}</div>}
+                  {e.note && <div style={{fontSize:FS.base,color:"#5e5850",marginTop:2,lineHeight:1.5}}>{e.note}</div>}
                 </div>
               );
             })}
@@ -381,13 +386,13 @@ function TrackerBoard({ onSelectJob }) {
         padding:"10px 20px",borderBottom:"1px solid #d4cfc4",
         display:"flex",alignItems:"center",gap:12,background:"#ede8de",
       }}>
-        <span style={{fontSize:10,fontWeight:700,color:"#5e5850",letterSpacing:"0.1em"}}>
+        <span style={{fontSize:FS.base,fontWeight:700,color:"#5e5850",letterSpacing:"0.1em"}}>
           PROGRESS TRACKER
         </span>
-        <span style={{fontSize:10,color:"#c4beb0"}}>·</span>
-        <span style={{fontSize:10,color:"#8a8278"}}>{items.length} active</span>
+        <span style={{fontSize:FS.base,color:"#c4beb0"}}>·</span>
+        <span style={{fontSize:FS.base,color:"#8a8278"}}>{items.length} active</span>
         <div style={{flex:1}}/>
-        <button onClick={load} style={{background:"none",border:"none",color:"#8a8278",cursor:"pointer",fontSize:12}}>↺</button>
+        <button onClick={load} style={{background:"none",border:"none",color:"#8a8278",cursor:"pointer",fontSize:FS.lg}}>↺</button>
       </div>
 
       <div style={{flex:1,overflow:"hidden",display:"flex",background:"#f5f0e8"}}>
@@ -408,13 +413,13 @@ function TrackerBoard({ onSelectJob }) {
                   borderBottom:`1px solid ${m.color}18`,background:"#e8e3d8",
                   borderRadius:"4px 4px 0 0",
                 }}>
-                  <span style={{fontSize:10,fontWeight:700,color:m.color,letterSpacing:"0.08em"}}>{m.label}</span>
-                  <span style={{fontSize:10,color:m.color,background:m.bg,
+                  <span style={{fontSize:FS.base,fontWeight:700,color:m.color,letterSpacing:"0.08em"}}>{m.label}</span>
+                  <span style={{fontSize:FS.base,color:m.color,background:m.bg,
                     padding:"1px 7px",borderRadius:10,fontFamily:"monospace"}}>{colJobs.length}</span>
                 </div>
                 <div style={{flex:1,overflowY:"auto",padding:8}}>
                   {colJobs.length===0
-                    ? <div style={{color:"#c4beb0",fontSize:10,textAlign:"center",padding:"20px 0"}}>empty</div>
+                    ? <div style={{color:"#c4beb0",fontSize:FS.base,textAlign:"center",padding:"20px 0"}}>empty</div>
                     : colJobs.map(j=>(
                       <div key={j.id}
                         onClick={()=>{ setExpanded(expanded===j.id?null:j.id); onSelectJob?.(j); }}
@@ -427,19 +432,19 @@ function TrackerBoard({ onSelectJob }) {
                         onMouseEnter={e=>e.currentTarget.style.borderColor=m.color+"45"}
                         onMouseLeave={e=>e.currentTarget.style.borderColor=expanded===j.id?m.color+"45":"#d4cfc4"}
                       >
-                        <div style={{fontSize:11,fontWeight:600,color:"#2c2820",
+                        <div style={{fontSize:FS.md,fontWeight:600,color:"#2c2820",
                           marginBottom:3,lineHeight:1.3,
                           overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                           {j.title}
                         </div>
-                        <div style={{fontSize:10,color:"#7a7268",marginBottom:6}}>{j.company}</div>
+                        <div style={{fontSize:FS.base,color:"#7a7268",marginBottom:6}}>{j.company}</div>
 
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                           {j.match_score!=null
                             ? <ScoreBar score={j.match_score}/>
-                            : <span style={{fontSize:9,color:"#a8a098"}}>no score</span>
+                            : <span style={{fontSize:FS.sm,color:"#a8a098"}}>no score</span>
                           }
-                          <span style={{fontSize:9,color:"#a8a098",fontFamily:"monospace"}}>
+                          <span style={{fontSize:FS.sm,color:"#a8a098",fontFamily:"monospace"}}>
                             {col==="applied"?fmt(j.applied_at):fmt(j.viewed_at)}
                           </span>
                         </div>
@@ -447,18 +452,18 @@ function TrackerBoard({ onSelectJob }) {
                         {expanded===j.id && (
                           <div style={{marginTop:10,borderTop:"1px solid #d4cfc4",paddingTop:10}}>
                             {j.apply_method && (
-                              <div style={{fontSize:9,color:"#8a8278",marginBottom:4}}>
+                              <div style={{fontSize:FS.sm,color:"#8a8278",marginBottom:4}}>
                                 via {j.apply_method}
                                 {j.recipient_email && ` → ${j.recipient_email}`}
                               </div>
                             )}
                             {j.notes && (
-                              <div style={{fontSize:9,color:"#5e5850",marginBottom:8,lineHeight:1.5}}>{j.notes}</div>
+                              <div style={{fontSize:FS.sm,color:"#5e5850",marginBottom:8,lineHeight:1.5}}>{j.notes}</div>
                             )}
                             <Timeline jobId={j.id} onRefresh={load}/>
                             <div style={{marginTop:10}}>
                               <a href={j.url} target="_blank" rel="noreferrer" style={{
-                                fontSize:9,color:"#4d7ab5",textDecoration:"none",
+                                fontSize:FS.sm,color:"#4d7ab5",textDecoration:"none",
                               }}>↗ open listing</a>
                             </div>
                           </div>
@@ -489,7 +494,10 @@ export default function App() {
   const [searchKwInput, setSearchKwInput] = useState("");
   const [searchLoc, setSearchLoc] = useState("Zürich");
   const [searchSrc, setSearchSrc] = useState(SOURCES);
-  const [filterStatus, setFilterStatus] = useState("all");
+  // "active" = everything except archived. Was "all", which meant the default view
+  // led with the jobs the pipeline had already rejected — and `archived` was not
+  // even offered as a filter button, so it could be neither avoided nor isolated.
+  const [filterStatus, setFilterStatus] = useState("active");
   const [filterText, setFilterText] = useState("");
   const [filterMinStars, setFilterMinStars] = useState(0);
   const [filterSource, setFilterSource] = useState("all");
@@ -509,7 +517,7 @@ export default function App() {
   const [linkedinExpLevel, setLinkedinExpLevel] = useState("3,4");
   const [direction, setDirection] = useState("all");
   const [directions, setDirections] = useState(DIRECTIONS_FALLBACK);
-  const [mainTab, setMainTab] = useState("board");   // board | tracker
+  const [mainTab, setMainTab] = useState("board");   // board | tracker | settings
   const [rightTab, setRightTab] = useState("detail"); // detail | company | timeline | apply | tailor
   const [applyModal, setApplyModal] = useState(false);
   const [tailorResult, setTailorResult] = useState(null);
@@ -525,7 +533,10 @@ export default function App() {
 
   const fetchJobs = useCallback(async () => {
     try {
-      const r = await fetch(`${API}/jobs?status=${filterStatus}&q=${encodeURIComponent(filterText)}&direction=${direction}&min_stars=${filterMinStars}&source=${filterSource}`);
+      // "active" is a client-side pseudo-status (everything except archived); the
+      // backend does not know it, so ask for everything and let `visible` narrow it.
+      const apiStatus = filterStatus === "active" ? "all" : filterStatus;
+      const r = await fetch(`${API}/jobs?status=${apiStatus}&q=${encodeURIComponent(filterText)}&direction=${direction}&min_stars=${filterMinStars}&source=${filterSource}`);
       if (r.ok) { setJobs(await r.json()); setBackendOk(true); }
     } catch {
       if (backendOk) addLog("✗ Backend offline — run: python server.py");
@@ -746,7 +757,8 @@ export default function App() {
   };
 
   const visible = jobs.filter(j=>
-    (filterStatus==="all"||j.status===filterStatus) &&
+    (filterStatus==="all"
+      || (filterStatus==="active" ? j.status!=="archived" : j.status===filterStatus)) &&
     (minMatch===0 || (j.match_score!=null && j.match_score*100 >= minMatch))
   );
 
@@ -778,7 +790,7 @@ export default function App() {
       padding:"8px 16px",border:"none",borderRadius:0,
       background:active?"#e8e3d8":"transparent",
       color:active?"#2c2820":"#8a8278",
-      fontSize:10,fontWeight:700,letterSpacing:"0.08em",
+      fontSize:FS.base,fontWeight:700,letterSpacing:"0.08em",
       cursor:"pointer",fontFamily:"monospace",
       borderBottom:active?"2px solid #4d7ab5":"2px solid transparent",
       transition:"color 0.15s, background 0.15s",
@@ -790,7 +802,7 @@ export default function App() {
   );
 
   const PipeGroup = ({label}) => (
-    <div style={{fontSize:8,color:"#b0a898",letterSpacing:"0.1em",fontWeight:700,
+    <div style={{fontSize:FS.xs,color:"#b0a898",letterSpacing:"0.1em",fontWeight:700,
       marginTop:8,marginBottom:3,display:"flex",alignItems:"center",gap:5}}>
       <div style={{flex:1,height:1,background:"#d4cfc4"}}/>
       <span>{label}</span>
@@ -822,14 +834,20 @@ export default function App() {
         <div style={{height:48,borderBottom:"1px solid #d4cfc4",background:"#ede8de",
           display:"flex",alignItems:"center",padding:"0 20px",gap:16,flexShrink:0,
           boxShadow:"0 1px 0 #e0dbd0"}}>
-          <span style={{fontFamily:"'Syne',sans-serif",fontSize:15,fontWeight:800,color:"#4d7ab5",letterSpacing:"0.05em"}}>
+          <span style={{fontFamily:"'Syne',sans-serif",fontSize:FS.xl,fontWeight:800,color:"#4d7ab5",letterSpacing:"0.05em"}}>
             🇨🇭 SWISS JOB HUNTER
           </span>
           <div style={{width:1,height:16,background:"#d4cfc4"}}/>
           <Tab id="board" label="BOARD" active={mainTab==="board"} onClick={()=>setMainTab("board")}/>
           <Tab id="tracker" label="TRACKER" active={mainTab==="tracker"} onClick={()=>setMainTab("tracker")}/>
+          <Tab id="settings" label="SETTINGS" active={mainTab==="settings"} onClick={()=>setMainTab("settings")}/>
           <div style={{flex:1}}/>
-          <span style={{fontSize:9,color:stats.total>0?"#4d8a68":"#a8a098",fontFamily:"monospace"}}>
+          {Object.values(loading).some(Boolean) && (
+            <span style={{fontSize:FS.sm,color:"#a87c2e",fontFamily:"monospace",letterSpacing:"0.08em"}}>
+              ◐ RUNNING — see SETTINGS
+            </span>
+          )}
+          <span style={{fontSize:FS.sm,color:stats.total>0?"#4d8a68":"#a8a098",fontFamily:"monospace"}}>
             ● {stats.total??0} JOBS IN DB
           </span>
         </div>
@@ -854,25 +872,20 @@ export default function App() {
         {/* BODY */}
         <div style={{flex:1,display:"flex",overflow:"hidden"}}>
 
-          {mainTab==="tracker"
-            ? <TrackerBoard onSelectJob={j=>{setSelected(j);setMainTab("board");}}/>
-            : <>
-              {/* LEFT PANEL */}
-              <div style={{width:300,borderRight:"1px solid #d4cfc4",display:"flex",
-                flexDirection:"column",background:"#ede8de",flexShrink:0,overflow:"hidden"}}>
-
-                <div style={{overflowY:"auto",flexShrink:0,maxHeight:"65%"}}>
-
+          {mainTab==="settings"
+            ? <div style={{flex:1,overflowY:"auto",background:"#f5f0e8",padding:"18px 24px"}}>
+                <div style={{maxWidth:820,margin:"0 auto",display:"flex",flexDirection:"column",gap:14}}>
+                  <div style={{background:"#ede8de",border:"1px solid #ddd8cc",borderRadius:6,overflow:"hidden"}}>
                 {/* Search */}
                 <div style={{padding:"10px 12px",borderBottom:"1px solid #ddd8cc"}}>
-                  <div style={{fontSize:8,letterSpacing:"0.12em",fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
-                    <span style={{background:"#4d7ab5",color:"#fff",borderRadius:3,padding:"0px 5px",fontSize:8}}>01</span>
+                  <div style={{fontSize:FS.xs,letterSpacing:"0.12em",fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
+                    <span style={{background:"#4d7ab5",color:"#fff",borderRadius:3,padding:"0px 5px",fontSize:FS.xs}}>01</span>
                     <span style={{color:"#5e5850"}}>PIPELINE</span>
                   </div>
                   <div style={{display:"flex",gap:3,marginBottom:4}}>
                     {["all",...directions].map(d=>(
                       <button key={d} onClick={()=>setDirection(d)} style={{
-                        flex:1,fontSize:8,padding:"3px 0",borderRadius:3,border:"1px solid",
+                        flex:1,fontSize:FS.xs,padding:"3px 0",borderRadius:3,border:"1px solid",
                         borderColor:direction===d?"#4d7ab555":"#d4cfc4",
                         background:direction===d?"#4d7ab512":"transparent",
                         color:direction===d?"#4d7ab5":"#8a8278",
@@ -883,7 +896,7 @@ export default function App() {
                   <div style={{display:"flex",gap:3,marginBottom:4}}>
                     {Object.entries(keywordPresets).map(([dir, kws])=>(
                       <button key={dir} onClick={()=>{ setSearchKws(kws); setSearchKwInput(""); setDirection(dir); }} style={{
-                        flex:1,fontSize:8,padding:"3px 0",borderRadius:3,border:"1px solid #4d7ab540",
+                        flex:1,fontSize:FS.xs,padding:"3px 0",borderRadius:3,border:"1px solid #4d7ab540",
                         background:"#4d7ab510",color:"#4d7ab5",cursor:"pointer",
                         fontFamily:"monospace",fontWeight:700,letterSpacing:"0.04em",
                       }}>⚡ {dir.toUpperCase()}</button>
@@ -893,7 +906,7 @@ export default function App() {
                     {searchKws.map((kw,i)=>(
                       <span key={i} style={{
                         display:"inline-flex",alignItems:"center",gap:3,
-                        fontSize:9,padding:"2px 6px",borderRadius:3,
+                        fontSize:FS.sm,padding:"2px 6px",borderRadius:3,
                         background:"#4d7ab518",border:"1px solid #4d7ab540",color:"#4d7ab5",
                         fontFamily:"monospace",fontWeight:700,
                       }}>
@@ -933,7 +946,7 @@ export default function App() {
                       borderColor:searchLoc===""?"#4d7ab555":"#d4cfc4",
                       background:searchLoc===""?"#4d7ab512":"transparent",
                       color:searchLoc===""?"#4d7ab5":"#8a8278",
-                      fontSize:9,fontWeight:700,fontFamily:"monospace",cursor:"pointer",whiteSpace:"nowrap",
+                      fontSize:FS.sm,fontWeight:700,fontFamily:"monospace",cursor:"pointer",whiteSpace:"nowrap",
                     }}>ALL CH</button>
                     <input type="number" min={1} max={40} value={searchPages}
                       onChange={e=>setSearchPages(Math.max(1,parseInt(e.target.value)||1))}
@@ -941,7 +954,7 @@ export default function App() {
                   </div>
                   <div style={{display:"flex",flexWrap:"wrap",gap:3,marginBottom:5}}>
                     <button onClick={()=>setSearchSrc(searchSrc.length===SOURCES.length?[]:SOURCES)} style={{
-                      fontSize:8,padding:"2px 6px",borderRadius:3,border:"1px solid",
+                      fontSize:FS.xs,padding:"2px 6px",borderRadius:3,border:"1px solid",
                       borderColor:searchSrc.length===SOURCES.length?"#4d7ab555":"#d4cfc4",
                       background:searchSrc.length===SOURCES.length?"#4d7ab512":"transparent",
                       color:searchSrc.length===SOURCES.length?"#4d7ab5":"#8a8278",
@@ -949,7 +962,7 @@ export default function App() {
                     }}>ALL</button>
                     {SOURCES.map(s=>(
                       <button key={s} onClick={()=>setSearchSrc(p=>p.includes(s)?p.filter(x=>x!==s):[...p,s])} style={{
-                        fontSize:8,padding:"2px 6px",borderRadius:3,border:"1px solid",
+                        fontSize:FS.xs,padding:"2px 6px",borderRadius:3,border:"1px solid",
                         borderColor:searchSrc.includes(s)?"#4d7ab555":"#d4cfc4",
                         background:searchSrc.includes(s)?"#4d7ab512":"transparent",
                         color:searchSrc.includes(s)?"#4d7ab5":"#8a8278",
@@ -959,13 +972,13 @@ export default function App() {
                   </div>
                   {searchSrc.includes("linkedin.com") && (<>
                     <select value={linkedinTimeRange} onChange={e=>setLinkedinTimeRange(e.target.value)}
-                      style={{...inp,marginBottom:0,fontSize:9,color:"#5e5850"}}>
+                      style={{...inp,marginBottom:0,fontSize:FS.sm,color:"#5e5850"}}>
                       <option value="r86400">LinkedIn · 24h</option>
                       <option value="r604800">LinkedIn · 7 days</option>
                       <option value="r2592000">LinkedIn · 30 days</option>
                     </select>
                     <select value={linkedinExpLevel} onChange={e=>setLinkedinExpLevel(e.target.value)}
-                      style={{...inp,marginBottom:0,fontSize:9,color:"#5e5850"}}>
+                      style={{...inp,marginBottom:0,fontSize:FS.sm,color:"#5e5850"}}>
                       <option value="2,3,4">LinkedIn · Entry–Senior</option>
                       <option value="3,4">LinkedIn · Associate–Senior</option>
                       <option value="4">LinkedIn · Senior only</option>
@@ -987,10 +1000,12 @@ export default function App() {
                   </div>
                 </div>
 
+                  </div>
+                  <div style={{background:"#ede8de",border:"1px solid #ddd8cc",borderRadius:6,overflow:"hidden"}}>
                 {/* Tools + Cleanup */}
                 <div style={{padding:"10px 12px",borderBottom:"1px solid #ddd8cc",display:"flex",flexDirection:"column",gap:3}}>
-                  <div style={{fontSize:8,letterSpacing:"0.12em",fontWeight:700,marginBottom:2,display:"flex",alignItems:"center",gap:6}}>
-                    <span style={{background:"#4d7ab5",color:"#fff",borderRadius:3,padding:"0px 5px",fontSize:8}}>02</span>
+                  <div style={{fontSize:FS.xs,letterSpacing:"0.12em",fontWeight:700,marginBottom:2,display:"flex",alignItems:"center",gap:6}}>
+                    <span style={{background:"#4d7ab5",color:"#fff",borderRadius:3,padding:"0px 5px",fontSize:FS.xs}}>02</span>
                     <span style={{color:"#5e5850"}}>TOOLS</span>
                   </div>
 
@@ -1019,24 +1034,24 @@ export default function App() {
                     color="#6464a8" disabled={!stats.total}/>
 
                   <div style={{display:"flex",alignItems:"center",gap:5,margin:"4px 0 2px",paddingLeft:2}}>
-                    <span style={{fontSize:9,color:"#b0a898",fontFamily:"monospace",letterSpacing:"0.05em"}}>ARCHIVE / PURGE BELOW</span>
+                    <span style={{fontSize:FS.sm,color:"#b0a898",fontFamily:"monospace",letterSpacing:"0.05em"}}>ARCHIVE / PURGE BELOW</span>
                     <input type="number" min={0} max={100} step={5} value={opsThreshold}
                       onChange={e=>{const v=Math.max(0,Math.min(100,parseInt(e.target.value)||0));setOpsThreshold(v);}}
                       title="sent to the backend as archive_below / max_score / min_score by the buttons in this panel. Separate from the list filter."
-                      style={{...inp,width:52,textAlign:"center",fontSize:10}}/>
-                    <span style={{fontSize:9,color:"#b0a898",fontFamily:"monospace"}}>%</span>
+                      style={{...inp,width:52,textAlign:"center",fontSize:FS.base}}/>
+                    <span style={{fontSize:FS.sm,color:"#b0a898",fontFamily:"monospace"}}>%</span>
                   </div>
 
                   <PipeGroup label="MAINTENANCE"/>
                   <Btn onClick={()=>runStream("run/company-lookup",{min_score:opsThreshold/100},"company-lookup")}
                     loading={loading["company-lookup"]} label="LOOKUP COMPANIES" icon="🏢"
                     color="#3d8a9a" disabled={!stats.total}/>
-                  <div style={{fontSize:9,color:"#b0a898",fontFamily:"monospace",marginTop:-1,paddingLeft:2}}>
+                  <div style={{fontSize:FS.sm,color:"#b0a898",fontFamily:"monospace",marginTop:-1,paddingLeft:2}}>
                     uses threshold ≥ {opsThreshold}% (set above)
                   </div>
 
                   <div style={{height:1,background:"#d4cfc4",margin:"6px 0 2px"}}/>
-                  <div style={{fontSize:8,color:"#c09898",letterSpacing:"0.1em",fontWeight:700,marginBottom:2,
+                  <div style={{fontSize:FS.xs,color:"#c09898",letterSpacing:"0.1em",fontWeight:700,marginBottom:2,
                     display:"flex",alignItems:"center",gap:5}}>
                     <div style={{flex:1,height:1,background:"#d4cfc4"}}/>
                     <span>PURGE ARCHIVED</span>
@@ -1046,105 +1061,72 @@ export default function App() {
                     <Btn onClick={()=>runStream("run/purge-archived",{max_score:opsThreshold/100,dry_run:false},"purge")}
                       loading={loading["purge"]} label="PURGE" icon="🗑" small color="#b84848"/>
                   </div>
-                  <div style={{fontSize:9,color:"#b0a898",fontFamily:"monospace",marginTop:-1,paddingLeft:2}}>
+                  <div style={{fontSize:FS.sm,color:"#b0a898",fontFamily:"monospace",marginTop:-1,paddingLeft:2}}>
                     permanently deletes new/analyzed/archived jobs scoring below {opsThreshold}% — no undo
                   </div>
                 </div>
 
-                {/* Filter */}
-                <div style={{padding:"10px 12px",borderBottom:"1px solid #ddd8cc"}}>
-                  <div style={{fontSize:8,letterSpacing:"0.12em",fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
-                    <span style={{background:"#4d7ab5",color:"#fff",borderRadius:3,padding:"0px 5px",fontSize:8}}>03</span>
-                    <span style={{color:"#5e5850"}}>FILTER</span>
                   </div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:3,marginBottom:6}}>
-                    {["all","new","shortlisted","viewed","considering","applied","interviewing","offer","rejected"].map(s=>(
-                      <button key={s} onClick={()=>setFilterStatus(s)} style={{
-                        fontSize:8,padding:"2px 7px",borderRadius:3,border:"1px solid",
-                        borderColor:filterStatus===s?(STATUS_META[s]?.color||"#4d7ab5")+"55":"#d4cfc4",
-                        background:filterStatus===s?(STATUS_META[s]?.color||"#4d7ab5")+"12":"transparent",
-                        color:filterStatus===s?(STATUS_META[s]?.color||"#4d7ab5"):"#8a8278",
-                        cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.05em",fontWeight:700,
-                      }}>{s.toUpperCase()}</button>
-                    ))}
-                  </div>
-                  <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:5}}>
-                    <input value={filterText} onChange={e=>setFilterText(e.target.value)}
-                      placeholder="search title / company..." style={{...inp,fontSize:10,flex:1}}/>
-                    <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
-                      <span style={{fontSize:9,color:"#a8a098",fontFamily:"monospace",whiteSpace:"nowrap"}}>≥</span>
-                      <input type="number" min={0} max={100} step={5} value={minMatch}
-                        onChange={e=>{const v=Math.max(0,Math.min(100,parseInt(e.target.value)||0));setMinMatch(v);}}
-                        title="hide jobs scoring below this — affects the list only, never sent to the backend"
-                        style={{...inp,width:52,textAlign:"center",fontSize:10}}/>
-                      <span style={{fontSize:9,color:"#a8a098",fontFamily:"monospace"}}>%</span>
-                    </div>
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:5}}>
-                    <span style={{fontSize:9,color:"#a8a098",fontFamily:"monospace",letterSpacing:"0.05em"}}>SORT</span>
-                    {[["score","MATCH"],["posted","DATE"],["company","COMPANY"]].map(([key,label])=>(
-                      <button key={key} onClick={()=>setSortBy(key)} title={
-                        key==="score" ? "best match first, across all dates"
-                        : key==="posted" ? "group by posting date, best match within each group"
-                        : "alphabetical by company, best match within each"
-                      } style={{
-                        fontSize:8,padding:"2px 7px",borderRadius:3,border:"1px solid",
-                        borderColor:sortBy===key?"#4d8a6855":"#d4cfc4",
-                        background:sortBy===key?"#4d8a6812":"transparent",
-                        color:sortBy===key?"#4d8a68":"#8a8278",
-                        cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.05em",fontWeight:700,
-                      }}>{label}</button>
-                    ))}
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}>
-                    <span style={{fontSize:9,color:"#a8a098",fontFamily:"monospace"}}>★≥</span>
-                    {[0,1,2,3,4,5].map(n=>(
-                      <button key={n} onClick={()=>setFilterMinStars(n)} style={{
-                        fontSize:n===0?9:12, padding:"1px 5px", borderRadius:3, border:"1px solid",
-                        borderColor:filterMinStars===n?"#c0903055":"#d4cfc4",
-                        background:filterMinStars===n?"#c0903012":"transparent",
-                        color:filterMinStars===n?"#a87c2e":"#a8a098",
-                        cursor:"pointer", fontFamily:"monospace", fontWeight:700, lineHeight:1,
-                      }}>{n===0?"ALL":"★".repeat(n)}</button>
-                    ))}
-                  </div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:3,marginBottom:4}}>
-                    <button onClick={()=>setFilterSource("all")} style={{
-                      fontSize:8,padding:"2px 7px",borderRadius:3,border:"1px solid",
-                      borderColor:filterSource==="all"?"#4d7ab555":"#d4cfc4",
-                      background:filterSource==="all"?"#4d7ab512":"transparent",
-                      color:filterSource==="all"?"#4d7ab5":"#8a8278",
-                      cursor:"pointer",fontFamily:"monospace",letterSpacing:"0.05em",fontWeight:700,
-                    }}>ALL SOURCES</button>
-                    {SOURCES.map(s=>(
-                      <button key={s} onClick={()=>setFilterSource(s)} style={{
-                        fontSize:8,padding:"2px 6px",borderRadius:3,border:"1px solid",
-                        borderColor:filterSource===s?"#4d7ab555":"#d4cfc4",
-                        background:filterSource===s?"#4d7ab512":"transparent",
-                        color:filterSource===s?"#4d7ab5":"#8a8278",
-                        cursor:"pointer",letterSpacing:"0.04em",fontFamily:"monospace",
-                      }}>{s.replace(/\.(ch|com)/,"")}</button>
-                    ))}
-                  </div>
-                </div>
-                </div>{/* end controls wrapper */}
-
+                  <div style={{background:"#ede8de",border:"1px solid #ddd8cc",borderRadius:6,
+                    overflow:"hidden",display:"flex",flexDirection:"column",minHeight:260}}>
                 {/* Log */}
                 <div style={{flex:1,minHeight:90,padding:"8px 10px",display:"flex",flexDirection:"column",gap:4,overflow:"hidden"}}>
                   <div style={{display:"flex",justifyContent:"space-between",
-                    fontSize:9,color:"#8a8278",letterSpacing:"0.12em",fontWeight:700}}>
+                    fontSize:FS.sm,color:"#8a8278",letterSpacing:"0.12em",fontWeight:700}}>
                     <span>LOG</span>
-                    <button onClick={()=>setLog([])} style={{background:"none",border:"none",color:"#b0a898",cursor:"pointer",fontSize:9}}>CLEAR</button>
+                    <button onClick={()=>setLog([])} style={{background:"none",border:"none",color:"#b0a898",cursor:"pointer",fontSize:FS.sm}}>CLEAR</button>
                   </div>
                   <LogPane lines={log} running={Object.values(loading).some(Boolean)}/>
                 </div>
+                  </div>
+                </div>
               </div>
-
+            : mainTab==="tracker"
+            ? <TrackerBoard onSelectJob={j=>{setSelected(j);setMainTab("board");}}/>
+            : <>
               {/* CENTER: Job list */}
               <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",minWidth:0,background:"#f5f0e8"}}>
+              {/* FILTER TOOLBAR — was a panel in the left sidebar */}
+              <div style={{padding:"7px 14px",borderBottom:"1px solid #ddd8cc",background:"#ede8de",
+                display:"flex",alignItems:"center",gap:7,flexWrap:"wrap",flexShrink:0}}>
+                <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}
+                  title="status" style={sel}>
+                  {["active","all","new","analyzed","shortlisted","viewed","considering",
+                    "applied","interviewing","offer","rejected","archived"].map(s=>(
+                    <option key={s} value={s}>{s==="active"?"ACTIVE (not archived)":s.toUpperCase()}</option>
+                  ))}
+                </select>
+                <select value={sortBy} onChange={e=>setSortBy(e.target.value)}
+                  title="sort order" style={sel}>
+                  <option value="score">SORT · BEST MATCH</option>
+                  <option value="posted">SORT · DATE POSTED</option>
+                  <option value="company">SORT · COMPANY</option>
+                </select>
+                <select value={filterSource} onChange={e=>setFilterSource(e.target.value)}
+                  title="source" style={sel}>
+                  <option value="all">ALL SOURCES</option>
+                  {SOURCES.map(s=><option key={s} value={s}>{s}</option>)}
+                </select>
+                <select value={filterMinStars} onChange={e=>setFilterMinStars(parseInt(e.target.value)||0)}
+                  title="minimum stars" style={sel}>
+                  {[0,1,2,3,4,5].map(n=><option key={n} value={n}>{n===0?"★ ANY":"★ ≥ "+n}</option>)}
+                </select>
+                <input value={filterText} onChange={e=>setFilterText(e.target.value)}
+                  placeholder="search title / company..."
+                  style={{...inp,fontSize:FS.base,flex:"1 1 160px",width:"auto",minWidth:120}}/>
+                <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
+                  <span style={{fontSize:FS.sm,color:"#a8a098",fontFamily:"monospace"}}>≥</span>
+                  <input type="number" min={0} max={100} step={5} value={minMatch}
+                    onChange={e=>{const v=Math.max(0,Math.min(100,parseInt(e.target.value)||0));setMinMatch(v);}}
+                    title="hide jobs scoring below this — list only, never sent to the backend"
+                    style={{...inp,width:54,textAlign:"center",fontSize:FS.base}}/>
+                  <span style={{fontSize:FS.sm,color:"#a8a098",fontFamily:"monospace"}}>%</span>
+                </div>
+              </div>
+
                 <div style={{
                   padding:"8px 14px",borderBottom:"1px solid #ddd8cc",
-                  display:"flex",alignItems:"center",gap:8,fontSize:9,color:"#8a8278",flexShrink:0,
+                  display:"flex",alignItems:"center",gap:8,fontSize:FS.sm,color:"#8a8278",flexShrink:0,
                   background:"#ede8de",
                 }}>
                   <span style={{fontWeight:700,letterSpacing:"0.1em",color:"#5e5850"}}>{visible.length} JOBS</span>
@@ -1154,13 +1136,13 @@ export default function App() {
                 </div>
                 <div style={{flex:1,overflowY:"auto"}}>
                   {visible.length===0
-                    ? <div style={{padding:40,textAlign:"center",color:"#c4beb0",fontSize:12}}>
+                    ? <div style={{padding:40,textAlign:"center",color:"#c4beb0",fontSize:FS.lg}}>
                         no jobs — run a search first
                       </div>
                     : visibleGroups.map(group=>(
                       <div key={group.key}>
                         <div style={{
-                          padding:"7px 14px",fontSize:11,fontWeight:800,letterSpacing:"0.12em",
+                          padding:"7px 14px",fontSize:FS.md,fontWeight:800,letterSpacing:"0.12em",
                           color:group.color,background:`${group.color}1c`,
                           borderTop:`1px solid ${group.color}30`,borderBottom:`2px solid ${group.color}60`,
                           position:"sticky",top:0,zIndex:2,
@@ -1170,7 +1152,7 @@ export default function App() {
                           <span style={{width:6,height:6,borderRadius:"50%",background:group.color,flexShrink:0}}/>
                           <span>{group.label}</span>
                           <span style={{
-                            fontSize:9,fontWeight:700,color:"#fff",background:group.color,
+                            fontSize:FS.sm,fontWeight:700,color:"#fff",background:group.color,
                             padding:"1px 6px",borderRadius:8,letterSpacing:0,
                           }}>{group.jobs.length}</span>
                         </div>
@@ -1184,11 +1166,11 @@ export default function App() {
                               display:"grid",gridTemplateColumns:"26px 1fr 100px 66px 70px 52px 18px",
                               alignItems:"center",gap:8,cursor:"pointer",transition:"background 0.1s",
                             }}>
-                            <span style={{fontSize:9,color:"#b0a898",fontWeight:700}}>#{j.id}</span>
+                            <span style={{fontSize:FS.sm,color:"#b0a898",fontWeight:700}}>#{j.id}</span>
                             <div style={{minWidth:0}}>
-                              <div style={{fontSize:11,fontWeight:600,color:"#2c2820",marginBottom:2,
+                              <div style={{fontSize:FS.md,fontWeight:600,color:"#2c2820",marginBottom:2,
                                 overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{j.title}</div>
-                              <div style={{fontSize:9,color:"#7a7268",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                              <div style={{fontSize:FS.sm,color:"#7a7268",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                                 {j.company} · {j.location}{j.posted_at && ` · ${timeAgo(j.posted_at)}`}
                               </div>
                             </div>
@@ -1198,16 +1180,16 @@ export default function App() {
                               {j.user_stars && <Stars stars={j.user_stars} jobId={j.id} onUpdate={()=>{fetchJobs();fetchStats();}}/>}
                             </div>
                             <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
-                              {j.direction&&<span style={{fontSize:7,fontFamily:"monospace",fontWeight:700,
+                              {j.direction&&<span style={{fontSize:FS.xxs,fontFamily:"monospace",fontWeight:700,
                                 color:"#fff",background:"#4d7ab5",padding:"1px 4px",borderRadius:2,letterSpacing:"0.06em"}}>
                                 {j.direction.toUpperCase()}</span>}
-                              <div style={{fontSize:8,color:"#b0a898",fontFamily:"monospace"}}>
+                              <div style={{fontSize:FS.xs,color:"#b0a898",fontFamily:"monospace"}}>
                                 {j.source?.replace(/\.(ch|com)/,"")}
                               </div>
                             </div>
                             <button onClick={e=>{e.stopPropagation();deleteJob(j.id);}} title="Delete"
                               style={{border:"none",background:"none",color:"#d4cfc4",cursor:"pointer",
-                                padding:0,fontSize:12,lineHeight:1,display:"flex",alignItems:"center",
+                                padding:0,fontSize:FS.lg,lineHeight:1,display:"flex",alignItems:"center",
                                 justifyContent:"center",borderRadius:3,width:18,height:18,
                                 transition:"color 0.15s, background 0.15s"}}
                               onMouseEnter={e=>{e.currentTarget.style.color="#b84848";e.currentTarget.style.background="#f8e8e8";}}
@@ -1237,31 +1219,31 @@ export default function App() {
                 {rightTab==="detail" && (
                   <div style={{flex:1,overflowY:"auto",padding:18}}>
                     {!selected
-                      ? <div style={{color:"#c4beb0",fontSize:12,textAlign:"center",marginTop:50}}>
+                      ? <div style={{color:"#c4beb0",fontSize:FS.lg,textAlign:"center",marginTop:50}}>
                           ← select a job
                         </div>
                       : <>
                         <div style={{marginBottom:14}}>
-                          <div style={{fontSize:14,fontWeight:700,color:"#2c2820",marginBottom:5,lineHeight:1.3}}>
+                          <div style={{fontSize:FS.xl,fontWeight:700,color:"#2c2820",marginBottom:5,lineHeight:1.3}}>
                             {selected.title}
                           </div>
                           <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
-                            <span style={{fontSize:11,color:"#5e5850"}}>
+                            <span style={{fontSize:FS.md,color:"#5e5850"}}>
                               {selected.company} · {selected.location}
                             </span>
                           </div>
                           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
                             <Stars stars={selected.user_stars} jobId={selected.id} onUpdate={()=>{fetchJobs();fetchStats();}}/>
-                            <span style={{fontSize:9,color:"#a8a098",fontFamily:"monospace"}}>
+                            <span style={{fontSize:FS.sm,color:"#a8a098",fontFamily:"monospace"}}>
                               {selected.user_stars ? `${selected.user_stars}/5` : "rate this job"}
                             </span>
                           </div>
                           <div style={{display:"flex",gap:7,flexWrap:"wrap",alignItems:"center"}}>
                             <Badge status={selected.status}/>
-                            {selected.employment_type&&<span style={{fontSize:9,color:"#7a7268",background:"#ddd8cc",padding:"2px 6px",borderRadius:3}}>{selected.employment_type}</span>}
-                            {selected.match_score!=null&&<span style={{fontSize:9,color:"#4d8a68"}}>match {Math.round(selected.match_score*100)}%</span>}
+                            {selected.employment_type&&<span style={{fontSize:FS.sm,color:"#7a7268",background:"#ddd8cc",padding:"2px 6px",borderRadius:3}}>{selected.employment_type}</span>}
+                            {selected.match_score!=null&&<span style={{fontSize:FS.sm,color:"#4d8a68"}}>match {Math.round(selected.match_score*100)}%</span>}
                           </div>
-                          <div style={{fontSize:9,color:"#a8a098",fontFamily:"monospace",marginTop:6}}>
+                          <div style={{fontSize:FS.sm,color:"#a8a098",fontFamily:"monospace",marginTop:6}}>
                             {selected.posted_at
                               ? `posted ${timeAgo(selected.posted_at)} · ${new Date(selected.posted_at).toLocaleDateString("de-CH")}`
                               : "posted date unknown"}
@@ -1270,18 +1252,18 @@ export default function App() {
 
                         {selected.match_explanation&&(
                           <div style={{background:"#e4dfd4",border:"1px solid #d4cfc4",borderRadius:5,
-                            padding:"9px 11px",marginBottom:12,fontSize:10,color:"#5e5850",lineHeight:1.6}}>
+                            padding:"9px 11px",marginBottom:12,fontSize:FS.base,color:"#5e5850",lineHeight:1.6}}>
                             {selected.match_explanation}
                           </div>
                         )}
 
                         <div style={{marginBottom:12}}>
                           <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
-                            <div style={{fontSize:9,color:"#8a8278",letterSpacing:"0.1em",fontWeight:700}}>JD</div>
+                            <div style={{fontSize:FS.sm,color:"#8a8278",letterSpacing:"0.1em",fontWeight:700}}>JD</div>
                             {selected.description && (<>
                               {["en","zh"].map(lang=>(
                                 <button key={lang} onClick={()=>translateDesc(selected,lang)} disabled={translating} style={{
-                                  fontSize:8,padding:"1px 6px",borderRadius:3,
+                                  fontSize:FS.xs,padding:"1px 6px",borderRadius:3,
                                   border:"1px solid #4d7ab540",background:"#4d7ab510",
                                   color:translating?"#a8a098":"#4d7ab5",
                                   cursor:translating?"not-allowed":"pointer",fontFamily:"monospace",fontWeight:700,
@@ -1289,14 +1271,14 @@ export default function App() {
                               ))}
                               {translatedDesc && (
                                 <button onClick={()=>setShowOriginalDesc(p=>!p)} style={{
-                                  fontSize:8,padding:"1px 6px",borderRadius:3,
+                                  fontSize:FS.xs,padding:"1px 6px",borderRadius:3,
                                   border:"1px solid #a87c2e40",background:"#a87c2e10",
                                   color:"#a87c2e",cursor:"pointer",fontFamily:"monospace",fontWeight:700,
                                 }}>{showOriginalDesc?"→译文":"→原文"}</button>
                               )}
                             </>)}
                           </div>
-                          <div style={{fontSize:10,color:"#6a6258",lineHeight:1.7,maxHeight:200,overflowY:"auto",
+                          <div style={{fontSize:FS.base,color:"#6a6258",lineHeight:1.7,maxHeight:200,overflowY:"auto",
                             background:"#f5f0e8",borderRadius:5,padding:"9px 11px",border:"1px solid #d4cfc4",
                             whiteSpace:"pre-wrap"}}>
                             {selected.description
@@ -1309,7 +1291,7 @@ export default function App() {
                         <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:14}}>
                           <a href={selected.url} target="_blank" rel="noreferrer" style={{
                             display:"block",padding:"7px 12px",borderRadius:4,
-                            background:"#e4dfd4",color:"#4d7ab5",fontSize:10,
+                            background:"#e4dfd4",color:"#4d7ab5",fontSize:FS.base,
                             textDecoration:"none",textAlign:"center",border:"1px solid #4d7ab530",
                             transition:"background 0.15s",
                           }}>↗ OPEN ORIGINAL LISTING</a>
@@ -1320,14 +1302,14 @@ export default function App() {
                         </div>
 
                         <div>
-                          <div style={{fontSize:9,color:"#8a8278",letterSpacing:"0.1em",fontWeight:700,marginBottom:7}}>UPDATE STATUS</div>
+                          <div style={{fontSize:FS.sm,color:"#8a8278",letterSpacing:"0.1em",fontWeight:700,marginBottom:7}}>UPDATE STATUS</div>
                           <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:10}}>
                             {["viewed","considering","shortlisted","applied","interviewing","offer","rejected","archived"].map(s=>(
                               <button key={s} onClick={()=>{
                                 if(s==="applied") setApplyModal(true);
                                 else updateStatus(selected.id,s);
                               }} style={{
-                                fontSize:8,padding:"4px 8px",borderRadius:3,
+                                fontSize:FS.xs,padding:"4px 8px",borderRadius:3,
                                 border:`1px solid ${STATUS_META[s]?.color||"#8a8278"}35`,
                                 background:selected.status===s?`${STATUS_META[s]?.color}18`:"transparent",
                                 color:STATUS_META[s]?.color||"#8a8278",
@@ -1345,17 +1327,17 @@ export default function App() {
                 {rightTab==="company" && (
                   <div style={{flex:1,overflowY:"auto",padding:18}}>
                     {!selected
-                      ? <div style={{color:"#c4beb0",fontSize:12,textAlign:"center",marginTop:50}}>← select a job</div>
+                      ? <div style={{color:"#c4beb0",fontSize:FS.lg,textAlign:"center",marginTop:50}}>← select a job</div>
                       : <>
-                        <div style={{fontSize:14,fontWeight:700,color:"#2c2820",marginBottom:3}}>
+                        <div style={{fontSize:FS.xl,fontWeight:700,color:"#2c2820",marginBottom:3}}>
                           {selected.company}
                         </div>
-                        <div style={{fontSize:10,color:"#8a8278",marginBottom:16}}>
+                        <div style={{fontSize:FS.base,color:"#8a8278",marginBottom:16}}>
                           {selected.location}
                         </div>
                         {companyCache[selected.company]
                           ? <div style={{
-                              fontSize:11,color:"#3c3830",lineHeight:1.8,
+                              fontSize:FS.md,color:"#3c3830",lineHeight:1.8,
                               whiteSpace:"pre-wrap",
                             }}>
                               {companyCache[selected.company]}
@@ -1363,18 +1345,18 @@ export default function App() {
                           : <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12,marginTop:40}}>
                               {companyCache[selected.company] === null
                                 ? <>
-                                    <span style={{fontSize:11,color:"#8a8278"}}>No info cached yet.</span>
+                                    <span style={{fontSize:FS.md,color:"#8a8278"}}>No info cached yet.</span>
                                     <button onClick={()=>triggerCompanyLookup(selected.company)}
                                       disabled={lookingUpCompany}
                                       style={{
                                         padding:"6px 14px",borderRadius:4,border:"1px solid #4d7ab540",
-                                        background:"#4d7ab510",color:"#4d7ab5",fontSize:11,
+                                        background:"#4d7ab510",color:"#4d7ab5",fontSize:FS.md,
                                         fontWeight:700,fontFamily:"monospace",cursor:"pointer",
                                       }}>
                                       {lookingUpCompany ? "⟳ Looking up…" : "🔍 Lookup company"}
                                     </button>
                                   </>
-                                : <span style={{fontSize:11,color:"#8a8278",fontFamily:"monospace"}}>⟳ loading…</span>
+                                : <span style={{fontSize:FS.md,color:"#8a8278",fontFamily:"monospace"}}>⟳ loading…</span>
                               }
                             </div>
                         }
@@ -1387,10 +1369,10 @@ export default function App() {
                 {rightTab==="timeline" && (
                   <div style={{flex:1,overflowY:"auto",padding:18}}>
                     {!selected
-                      ? <div style={{color:"#c4beb0",fontSize:12,textAlign:"center",marginTop:50}}>← select a job</div>
+                      ? <div style={{color:"#c4beb0",fontSize:FS.lg,textAlign:"center",marginTop:50}}>← select a job</div>
                       : <>
-                        <div style={{fontSize:12,fontWeight:700,color:"#2c2820",marginBottom:2}}>{selected.title}</div>
-                        <div style={{fontSize:10,color:"#8a8278",marginBottom:16}}>{selected.company}</div>
+                        <div style={{fontSize:FS.lg,fontWeight:700,color:"#2c2820",marginBottom:2}}>{selected.title}</div>
+                        <div style={{fontSize:FS.base,color:"#8a8278",marginBottom:16}}>{selected.company}</div>
                         <Timeline jobId={selected.id} onRefresh={()=>{fetchJobs();fetchStats();}}/>
                       </>
                     }
@@ -1401,24 +1383,24 @@ export default function App() {
                 {rightTab==="tailor" && (
                   <div style={{flex:1,overflowY:"auto",padding:18,display:"flex",flexDirection:"column",gap:14}}>
                     {!selected
-                      ? <div style={{color:"#c4beb0",fontSize:12,textAlign:"center",marginTop:50}}>← select a job first</div>
+                      ? <div style={{color:"#c4beb0",fontSize:FS.lg,textAlign:"center",marginTop:50}}>← select a job first</div>
                       : !tailorResult
                       ? <div style={{display:"flex",flexDirection:"column",gap:10,alignItems:"center",marginTop:40}}>
-                          <div style={{fontSize:11,color:"#8a8278",textAlign:"center"}}>
+                          <div style={{fontSize:FS.md,color:"#8a8278",textAlign:"center"}}>
                             Generate tailored suggestions for<br/>
                             <strong style={{color:"#2c2820"}}>{selected.title}</strong>
                           </div>
                           <Btn onClick={()=>tailorCv(selected)} loading={loading.tailor}
                             disabled={!selected.description} label="TAILOR CV FOR THIS JD" icon="📝" color="#a87c2e"/>
-                          {!selected.description && <div style={{fontSize:9,color:"#a87c2e"}}>run Enrich first to get full JD</div>}
+                          {!selected.description && <div style={{fontSize:FS.sm,color:"#a87c2e"}}>run Enrich first to get full JD</div>}
                         </div>
                       : <>
                         {tailorResult.missing_keywords?.length > 0 && (
                           <div>
-                            <div style={{fontSize:9,fontWeight:700,color:"#8a8278",letterSpacing:"0.1em",marginBottom:6}}>MISSING KEYWORDS TO ADD</div>
+                            <div style={{fontSize:FS.sm,fontWeight:700,color:"#8a8278",letterSpacing:"0.1em",marginBottom:6}}>MISSING KEYWORDS TO ADD</div>
                             <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
                               {tailorResult.missing_keywords.map((kw,i)=>(
-                                <span key={i} style={{fontSize:9,padding:"2px 7px",borderRadius:10,
+                                <span key={i} style={{fontSize:FS.sm,padding:"2px 7px",borderRadius:10,
                                   background:"#f5e8cc",color:"#a87c2e",border:"1px solid #a87c2e40"}}>
                                   {kw}
                                 </span>
@@ -1429,12 +1411,12 @@ export default function App() {
 
                         {tailorResult.suggestions?.length > 0 && (
                           <div>
-                            <div style={{fontSize:9,fontWeight:700,color:"#8a8278",letterSpacing:"0.1em",marginBottom:8}}>SUGGESTED REWRITES</div>
+                            <div style={{fontSize:FS.sm,fontWeight:700,color:"#8a8278",letterSpacing:"0.1em",marginBottom:8}}>SUGGESTED REWRITES</div>
                             <div style={{display:"flex",flexDirection:"column",gap:10}}>
                               {tailorResult.suggestions.map((s,i)=>(
                                 <div key={i} style={{background:"#e4dfd4",borderRadius:5,padding:"10px 12px",
-                                  border:"1px solid #d4cfc4",fontSize:10}}>
-                                  <div style={{fontWeight:700,color:"#4d7ab5",marginBottom:5,fontSize:9,letterSpacing:"0.05em"}}>
+                                  border:"1px solid #d4cfc4",fontSize:FS.base}}>
+                                  <div style={{fontWeight:700,color:"#4d7ab5",marginBottom:5,fontSize:FS.sm,letterSpacing:"0.05em"}}>
                                     {s.section}
                                   </div>
                                   <div style={{color:"#a8a098",marginBottom:4,textDecoration:"line-through",opacity:0.8}}>
@@ -1443,7 +1425,7 @@ export default function App() {
                                   <div style={{color:"#2c2820",marginBottom:5,lineHeight:1.5}}>
                                     → {s.rewrite}
                                   </div>
-                                  <div style={{fontSize:9,color:"#a87c2e",fontStyle:"italic"}}>
+                                  <div style={{fontSize:FS.sm,color:"#a87c2e",fontStyle:"italic"}}>
                                     {s.reason}
                                   </div>
                                 </div>
@@ -1463,17 +1445,17 @@ export default function App() {
                 {rightTab==="apply" && (
                   <div style={{flex:1,overflowY:"auto",padding:18,display:"flex",flexDirection:"column",gap:12}}>
                     {!selected
-                      ? <div style={{color:"#c4beb0",fontSize:12,textAlign:"center",marginTop:50}}>← select a job first</div>
+                      ? <div style={{color:"#c4beb0",fontSize:FS.lg,textAlign:"center",marginTop:50}}>← select a job first</div>
                       : <>
                         <div>
-                          <div style={{fontSize:12,fontWeight:700,color:"#2c2820",marginBottom:2}}>{selected.title}</div>
-                          <div style={{fontSize:10,color:"#8a8278"}}>{selected.company}</div>
+                          <div style={{fontSize:FS.lg,fontWeight:700,color:"#2c2820",marginBottom:2}}>{selected.title}</div>
+                          <div style={{fontSize:FS.base,color:"#8a8278"}}>{selected.company}</div>
                         </div>
                         <div style={{display:"flex",gap:5,alignItems:"center"}}>
-                          <span style={{fontSize:9,color:"#8a8278",fontWeight:700,letterSpacing:"0.08em"}}>LANG:</span>
+                          <span style={{fontSize:FS.sm,color:"#8a8278",fontWeight:700,letterSpacing:"0.08em"}}>LANG:</span>
                           {["en","de","fr"].map(l=>(
                             <button key={l} onClick={()=>setCoverLang(l)} style={{
-                              fontSize:9,padding:"3px 8px",borderRadius:3,
+                              fontSize:FS.sm,padding:"3px 8px",borderRadius:3,
                               border:`1px solid ${coverLang===l?"#4d7ab555":"#d4cfc4"}`,
                               background:coverLang===l?"#4d7ab512":"transparent",
                               color:coverLang===l?"#4d7ab5":"#8a8278",
@@ -1481,7 +1463,7 @@ export default function App() {
                             }}>{l.toUpperCase()}</button>
                           ))}
                           <button onClick={()=>generateCover(selected)} disabled={loading.cover} style={{
-                            marginLeft:"auto",fontSize:9,padding:"3px 9px",borderRadius:3,
+                            marginLeft:"auto",fontSize:FS.sm,padding:"3px 9px",borderRadius:3,
                             border:"1px solid #9070c840",background:"#9070c810",color:"#9070c8",
                             cursor:"pointer",fontFamily:"monospace",fontWeight:700,
                           }}>{loading.cover?"⟳ ...":"↻ GENERATE"}</button>
@@ -1489,7 +1471,7 @@ export default function App() {
                         <textarea value={coverLetter} onChange={e=>setCoverLetter(e.target.value)}
                           placeholder="cover letter appears here after generation..."
                           style={{flex:1,minHeight:260,background:"#f5f0e8",border:"1px solid #d4cfc4",
-                            borderRadius:5,padding:"11px 13px",color:"#4a4238",fontSize:11,
+                            borderRadius:5,padding:"11px 13px",color:"#4a4238",fontSize:FS.md,
                             lineHeight:1.8,fontFamily:"Georgia,serif"}}/>
                         <div style={{display:"flex",flexDirection:"column",gap:7}}>
                           <Btn onClick={()=>{navigator.clipboard.writeText(coverLetter);addLog("✓ Copied");}}
@@ -1521,8 +1503,13 @@ export default function App() {
   );
 }
 
+const sel = {
+  padding:"5px 8px",borderRadius:4,background:"#faf7f2",border:"1px solid #c8c2b4",
+  color:"#4a4238",fontSize:FS.base,fontFamily:"monospace",cursor:"pointer",
+};
+
 const inp = {
   width:"100%",padding:"6px 9px",borderRadius:4,
   background:"#faf7f2",border:"1px solid #c8c2b4",
-  color:"#4a4238",fontSize:11,
+  color:"#4a4238",fontSize:FS.md,
 };
