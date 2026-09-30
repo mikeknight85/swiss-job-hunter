@@ -1274,6 +1274,28 @@ export default function App() {
                           ← select a job
                         </div>
                       : <>
+                        <div style={{
+                          position:"sticky",top:-18,zIndex:3,
+                          margin:"-18px -18px 14px",padding:"9px 18px",
+                          background:"#ede8de",borderBottom:"1px solid #d4cfc4",
+                          display:"flex",alignItems:"center",gap:7,flexWrap:"wrap",
+                          boxShadow:"0 1px 3px rgba(0,0,0,0.05)",
+                        }}>
+                          <span style={{fontSize:FS.sm,color:"#8a8278",letterSpacing:"0.1em",
+                            fontWeight:700,flexShrink:0}}>STATUS</span>
+                          {["considering","applied","interviewing","offer","rejected","archived"].map(s=>(
+                            <button key={s} onClick={()=>{
+                              if(s==="applied") setApplyModal(true);
+                              else updateStatus(selected.id,s);
+                            }} style={{
+                              fontSize:FS.xs,padding:"4px 9px",borderRadius:3,
+                              border:`1px solid ${STATUS_META[s]?.color||"#8a8278"}${selected.status===s?"90":"35"}`,
+                              background:selected.status===s?`${STATUS_META[s]?.color}22`:"transparent",
+                              color:STATUS_META[s]?.color||"#8a8278",
+                              cursor:"pointer",fontFamily:"monospace",fontWeight:700,letterSpacing:"0.05em",
+                            }}>{s.toUpperCase()}</button>
+                          ))}
+                        </div>
                         <div style={{marginBottom:14}}>
                           <div style={{fontSize:FS.xl,fontWeight:700,color:"#2c2820",marginBottom:5,lineHeight:1.3}}>
                             {selected.title}
@@ -1352,23 +1374,6 @@ export default function App() {
                             disabled={!selected?.description} label="TAILOR CV FOR THIS JD" icon="📝" color="#a87c2e"/>
                         </div>
 
-                        <div>
-                          <div style={{fontSize:FS.sm,color:"#8a8278",letterSpacing:"0.1em",fontWeight:700,marginBottom:7}}>UPDATE STATUS</div>
-                          <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:10}}>
-                            {["viewed","considering","shortlisted","applied","interviewing","offer","rejected","archived"].map(s=>(
-                              <button key={s} onClick={()=>{
-                                if(s==="applied") setApplyModal(true);
-                                else updateStatus(selected.id,s);
-                              }} style={{
-                                fontSize:FS.xs,padding:"4px 8px",borderRadius:3,
-                                border:`1px solid ${STATUS_META[s]?.color||"#8a8278"}35`,
-                                background:selected.status===s?`${STATUS_META[s]?.color}18`:"transparent",
-                                color:STATUS_META[s]?.color||"#8a8278",
-                                cursor:"pointer",fontFamily:"monospace",fontWeight:700,letterSpacing:"0.05em",
-                              }}>{s.toUpperCase()}</button>
-                            ))}
-                          </div>
-                        </div>
                       </>
                     }
                   </div>
