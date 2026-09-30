@@ -11,7 +11,7 @@ import sys
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import AsyncGenerator, Optional
+from typing import Any, AsyncGenerator, Optional
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -56,6 +56,142 @@ def get_config():
         "default_location": s.default_location,
         "keyword_presets": s.keyword_presets,
     }
+
+
+# ── Editable settings ─────────────────────────────────────────────────────────
+# Allow-list. Anything not named here cannot be written through the API.
+# `secret` fields are accepted on write but NEVER returned — GET reports only
+# whether a value is set plus a last-4 hint.
+SETTINGS_SPEC: list[dict] = [
+    # group, field, type, secret
+    {"group": "LLM",     "field": "llm_provider",        "type": "choice", "choices": ["auto","anthropic","deepseek","openrouter","ollama"]},
+    {"group": "LLM",     "field": "anthropic_api_key",   "type": "str", "secret": True},
+    {"group": "LLM",     "field": "anthropic_model",     "type": "str"},
+    {"group": "LLM",     "field": "deepseek_api_key",    "type": "str", "secret": True},
+    {"group": "LLM",     "field": "deepseek_model",      "type": "str"},
+    {"group": "LLM",     "field": "openrouter_api_key",  "type": "str", "secret": True},
+    {"group": "LLM",     "field": "openrouter_model",    "type": "str"},
+    {"group": "LLM",     "field": "ollama_base_url",     "type": "str"},
+    {"group": "LLM",     "field": "ollama_model",        "type": "str"},
+    {"group": "Scoring", "field": "candidate_persona",   "type": "text"},
+    {"group": "Search",  "field": "default_keyword",     "type": "str"},
+    {"group": "Search",  "field": "default_location",    "type": "str"},
+    {"group": "Search",  "field": "default_language",    "type": "choice", "choices": ["en","de","fr"]},
+    {"group": "Search",  "field": "search_radius_km",    "type": "int"},
+    {"group": "Dedup",   "field": "semantic_similarity_threshold", "type": "float"},
+]
+_SPEC_BY_FIELD = {e["field"]: e for e in SETTINGS_SPEC}
+
+
+def _mask(value: str) -> str:
+    if not value:
+        return ""
+    return ("…" + value[-4:]) if len(value) > 4 else "…"
+
+
+def _env_path() -> Path:
+    return Path(".env")
+
+
+def _write_env(updates: dict[str, str]) -> None:
+    """Merge updates into .env, preserving unrelated lines, comments and order."""
+    path = _env_path()
+    lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+    seen: set[str] = set()
+    out: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#") and "=" in stripped:
+            key = stripped.split("=", 1)[0].strip()
+            if key.lower() in updates:
+                out.append(f"{key}={updates[key.lower()]}")
+                seen.add(key.lower())
+                continue
+        out.append(line)
+    for key, value in updates.items():
+        if key not in seen:
+            out.append(f"{key.upper()}={value}")
+    tmp = path.with_suffix(".env.tmp")
+    tmp.write_text("\n".join(out) + "\n", encoding="utf-8")
+    tmp.replace(path)
+
+
+@app.get("/settings")
+def get_settings():
+    """Effective configuration. Secrets are never returned, only whether they are set."""
+    from config.settings import settings
+    groups: dict[str, list] = {}
+    for entry in SETTINGS_SPEC:
+        field = entry["field"]
+        raw = getattr(settings, field, "")
+        item = {
+            "field": field,
+            "type": entry["type"],
+            "secret": bool(entry.get("secret")),
+            "choices": entry.get("choices"),
+        }
+        if entry.get("secret"):
+            item["is_set"] = bool(raw)
+            item["hint"] = _mask(str(raw))
+            item["value"] = ""
+        else:
+            item["value"] = raw
+        groups.setdefault(entry["group"], []).append(item)
+    return {"groups": groups, "env_file": str(_env_path().resolve()),
+            "env_writable": os.access(_env_path().parent, os.W_OK)}
+
+
+class SettingsUpdate(BaseModel):
+    values: dict[str, Any]
+
+
+@app.post("/settings")
+def update_settings(req: SettingsUpdate):
+    """
+    Write allow-listed settings to .env and apply them to the running process.
+
+    NOTE: this endpoint accepts API keys. The app has no authentication of its
+    own — whatever fronts it is the only thing protecting these values. An empty
+    string for a secret means "leave unchanged", so the UI never has to round-trip
+    a key it cannot read.
+    """
+    from config.settings import settings
+    applied, rejected, env_updates = [], [], {}
+
+    for field, value in req.values.items():
+        entry = _SPEC_BY_FIELD.get(field)
+        if entry is None:
+            rejected.append({"field": field, "reason": "not editable"})
+            continue
+        if entry.get("secret") and (value is None or str(value).strip() == ""):
+            continue  # unchanged
+        try:
+            if entry["type"] == "int":
+                parsed: Any = int(value)
+            elif entry["type"] == "float":
+                parsed = float(value)
+            elif entry["type"] == "choice":
+                parsed = str(value)
+                if parsed not in (entry.get("choices") or []):
+                    raise ValueError(f"must be one of {entry['choices']}")
+            else:
+                parsed = str(value)
+        except (TypeError, ValueError) as e:
+            rejected.append({"field": field, "reason": str(e)})
+            continue
+
+        setattr(settings, field, parsed)          # applies immediately: llm/router
+        env_updates[field] = str(parsed)          # reads settings.* on every call
+        applied.append(field)
+
+    if env_updates:
+        try:
+            _write_env(env_updates)
+        except OSError as e:
+            raise HTTPException(500, f"settings applied to the running process but .env could not be written: {e}")
+
+    return {"applied": applied, "rejected": rejected,
+            "note": "Applied to the running process and persisted to .env."}
 
 
 @app.get("/presets")

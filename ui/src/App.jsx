@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Fragment } from "react";
 
 // window.__API_BASE_URL__ is injected at container startup (see
 // ui/docker-entrypoint.sh) so a single built image works across hosts;
@@ -873,13 +873,16 @@ export default function App() {
         <div style={{flex:1,display:"flex",overflow:"hidden"}}>
 
           {mainTab==="settings"
-            ? <div style={{flex:1,overflowY:"auto",background:"#f5f0e8",padding:"18px 24px"}}>
-                <div style={{maxWidth:820,margin:"0 auto",display:"flex",flexDirection:"column",gap:14}}>
+            ? <div style={{flex:1,overflowY:"auto",background:"#f5f0e8",padding:"16px 24px"}}>
+                <div style={{maxWidth:880,display:"flex",flexDirection:"column",gap:14}}>
+                  <div style={{background:"#ede8de",border:"1px solid #ddd8cc",borderRadius:6,overflow:"hidden"}}>
+                    <SettingsConfig onLog={addLog}/>
+                  </div>
                   <div style={{background:"#ede8de",border:"1px solid #ddd8cc",borderRadius:6,overflow:"hidden"}}>
                 {/* Search */}
                 <div style={{padding:"10px 12px",borderBottom:"1px solid #ddd8cc"}}>
                   <div style={{fontSize:FS.xs,letterSpacing:"0.12em",fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
-                    <span style={{background:"#4d7ab5",color:"#fff",borderRadius:3,padding:"0px 5px",fontSize:FS.xs}}>01</span>
+                    <span style={{background:"#4d7ab5",color:"#fff",borderRadius:3,padding:"0px 5px",fontSize:FS.xs}}>02</span>
                     <span style={{color:"#5e5850"}}>PIPELINE</span>
                   </div>
                   <div style={{display:"flex",gap:3,marginBottom:4}}>
@@ -1005,7 +1008,7 @@ export default function App() {
                 {/* Tools + Cleanup */}
                 <div style={{padding:"10px 12px",borderBottom:"1px solid #ddd8cc",display:"flex",flexDirection:"column",gap:3}}>
                   <div style={{fontSize:FS.xs,letterSpacing:"0.12em",fontWeight:700,marginBottom:2,display:"flex",alignItems:"center",gap:6}}>
-                    <span style={{background:"#4d7ab5",color:"#fff",borderRadius:3,padding:"0px 5px",fontSize:FS.xs}}>02</span>
+                    <span style={{background:"#4d7ab5",color:"#fff",borderRadius:3,padding:"0px 5px",fontSize:FS.xs}}>03</span>
                     <span style={{color:"#5e5850"}}>TOOLS</span>
                   </div>
 
@@ -1500,6 +1503,119 @@ export default function App() {
         />
       )}
     </>
+  );
+}
+
+
+// ── Configuration panel ───────────────────────────────────────────────────────
+// Reads GET /settings (secrets are never returned — only whether they are set and
+// a last-4 hint) and writes back through POST /settings, which merges into .env
+// and applies to the running process. Leaving a key field blank means "unchanged".
+function SettingsConfig({ onLog }) {
+  const [groups, setGroups] = useState(null);
+  const [draft, setDraft]   = useState({});
+  const [meta, setMeta]     = useState({});
+  const [busy, setBusy]     = useState(false);
+  const [msg, setMsg]       = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const r = await fetch(`${API}/settings`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const d = await r.json();
+      setGroups(d.groups); setMeta(d);
+      const init = {};
+      Object.values(d.groups).flat().forEach(f => { init[f.field] = f.secret ? "" : f.value; });
+      setDraft(init);
+    } catch (e) { setMsg(`✗ could not load settings — ${e.message}`); }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const save = async () => {
+    setBusy(true); setMsg("");
+    try {
+      const r = await fetch(`${API}/settings`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ values: draft }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+      const n = (d.applied || []).length;
+      setMsg(`✓ saved ${n} setting${n === 1 ? "" : "s"}${(d.rejected || []).length ? ` · ${d.rejected.length} rejected` : ""}`);
+      onLog?.(`✓ settings saved (${n})`);
+      load();
+    } catch (e) { setMsg(`✗ ${e.message}`); }
+    setBusy(false);
+  };
+
+  const label = f => f.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+  const field = (f) => {
+    const v = draft[f.field] ?? "";
+    const set = x => setDraft(d => ({ ...d, [f.field]: x }));
+    if (f.type === "choice")
+      return <select value={v} onChange={e=>set(e.target.value)} style={{...sel,width:"100%"}}>
+        {(f.choices||[]).map(c => <option key={c} value={c}>{c}</option>)}
+      </select>;
+    if (f.type === "text")
+      return <textarea value={v} onChange={e=>set(e.target.value)} rows={4}
+        style={{...inp,fontFamily:"inherit",lineHeight:1.5,resize:"vertical"}}/>;
+    if (f.type === "int" || f.type === "float")
+      return <input type="number" step={f.type==="float"?0.01:1} value={v}
+        onChange={e=>set(e.target.value)} style={inp}/>;
+    if (f.secret)
+      return <input type="password" value={v} onChange={e=>set(e.target.value)}
+        placeholder={f.is_set ? `set (${f.hint}) — leave blank to keep` : "not set"}
+        autoComplete="new-password" style={inp}/>;
+    return <input value={v} onChange={e=>set(e.target.value)} style={inp}/>;
+  };
+
+  if (!groups) return <div style={{padding:14,fontSize:FS.md,color:"#8a8278"}}>{msg || "loading settings…"}</div>;
+
+  return (
+    <div style={{padding:"12px 14px"}}>
+      <div style={{fontSize:FS.xs,letterSpacing:"0.12em",fontWeight:700,marginBottom:10,
+        display:"flex",alignItems:"center",gap:6}}>
+        <span style={{background:"#3d8a9a",color:"#fff",borderRadius:3,padding:"0px 5px",fontSize:FS.xs}}>01</span>
+        <span style={{color:"#5e5850"}}>CONFIGURATION</span>
+      </div>
+
+      {Object.entries(groups).map(([group, fields]) => (
+        <div key={group} style={{marginBottom:14}}>
+          <div style={{fontSize:FS.sm,fontWeight:700,color:"#8a8278",letterSpacing:"0.1em",
+            marginBottom:7,paddingBottom:3,borderBottom:"1px solid #ddd8cc"}}>{group.toUpperCase()}</div>
+          <div style={{display:"grid",gridTemplateColumns:"200px 1fr",gap:"8px 14px",alignItems:"start"}}>
+            {fields.map(f => (
+              <Fragment key={f.field}>
+                <label style={{fontSize:FS.md,color:"#4a4238",paddingTop:6}}>
+                  {label(f.field)}
+                  {f.secret && <span style={{marginLeft:6,fontSize:FS.sm,fontFamily:"monospace",
+                    color:f.is_set?"#4d8a68":"#b0a898"}}>{f.is_set?"● set":"○ unset"}</span>}
+                </label>
+                <div>{field(f)}</div>
+              </Fragment>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <div style={{display:"flex",alignItems:"center",gap:10,marginTop:4}}>
+        <button onClick={save} disabled={busy} style={{
+          padding:"7px 16px",borderRadius:4,border:"1px solid #3d8a9a55",
+          background:busy?"#e4dfd4":"#3d8a9a12",color:"#3d8a9a",
+          fontSize:FS.md,fontWeight:700,letterSpacing:"0.06em",
+          cursor:busy?"default":"pointer",fontFamily:"monospace",
+        }}>{busy ? "SAVING…" : "SAVE SETTINGS"}</button>
+        {msg && <span style={{fontSize:FS.md,fontFamily:"monospace",
+          color:msg.startsWith("✓")?"#4d8a68":"#b84848"}}>{msg}</span>}
+      </div>
+
+      <div style={{fontSize:FS.sm,color:"#b0a898",fontFamily:"monospace",marginTop:9,lineHeight:1.6}}>
+        written to {meta.env_file || ".env"} and applied to the running process
+        {meta.env_writable === false && <span style={{color:"#b84848"}}> · .env is not writable — changes will not survive a restart</span>}
+        <br/>API keys are write-only here: they are never sent back to the browser.
+      </div>
+    </div>
   );
 }
 
