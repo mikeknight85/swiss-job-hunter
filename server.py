@@ -1325,15 +1325,24 @@ def get_tracker():
     """
     from db.session import get_session
     from db.models import Job, JobStatus, Application
+    from sqlalchemy import or_, and_
     active_statuses = [
         JobStatus.VIEWED, JobStatus.CONSIDERING, JobStatus.APPLIED,
         JobStatus.INTERVIEWING, JobStatus.OFFER,
         JobStatus.REJECTED,
     ]
     with get_session() as session:
+        # ARCHIVED is included so the board has somewhere to drop a dismissed card,
+        # but only for jobs the user actually handled. Most archived rows are
+        # pipeline rejects that were never opened (829 vs 5 on a real database),
+        # and listing those would drown the column.
         jobs = (
             session.query(Job)
-            .filter(Job.status.in_(active_statuses))
+            .filter(or_(
+                Job.status.in_(active_statuses),
+                and_(Job.status == JobStatus.ARCHIVED,
+                     or_(Job.viewed_at.isnot(None), Job.applied_at.isnot(None))),
+            ))
             .order_by(Job.updated_at.desc())
             .all()
         )
