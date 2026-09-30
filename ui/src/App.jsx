@@ -377,7 +377,10 @@ function TrackerBoard({ onSelectJob, onChanged }) {
 
   useEffect(() => { load(); const t = setInterval(load, 15000); return ()=>clearInterval(t); }, [load]);
 
-  const cols = ["viewed","considering","applied","interviewing","offer","rejected","archived"];
+  // "viewed" is deliberately absent: it is set by looking at a job, not by
+  // deciding anything, so it is browsing history rather than a pipeline stage.
+  // The tracker only shows jobs a decision has been made about.
+  const cols = ["considering","applied","interviewing","offer","rejected","archived"];
   const byStatus = Object.fromEntries(cols.map(c => [c, items.filter(j=>j.status===c)]));
 
   // Drop a card into another column: PATCH the status, move it locally so the

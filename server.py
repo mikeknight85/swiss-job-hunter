@@ -1326,8 +1326,10 @@ def get_tracker():
     from db.session import get_session
     from db.models import Job, JobStatus, Application
     from sqlalchemy import or_, and_
+    # VIEWED is excluded on purpose — it is assigned by opening a listing, so it
+    # records browsing rather than intent and does not belong on a decision board.
     active_statuses = [
-        JobStatus.VIEWED, JobStatus.CONSIDERING, JobStatus.APPLIED,
+        JobStatus.CONSIDERING, JobStatus.APPLIED,
         JobStatus.INTERVIEWING, JobStatus.OFFER,
         JobStatus.REJECTED,
     ]
